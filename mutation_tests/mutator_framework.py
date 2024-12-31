@@ -1,5 +1,4 @@
 import ast
-import os
 import subprocess
 import astor
 from mutpy.operators import MutationOperator
@@ -11,9 +10,38 @@ class MutationOperator(ast.NodeTransformer):
         self.mutation_points = []
 
     def visit_BinOp(self, node):
-        if self.operator_type == "AOR" and isinstance(node.op, ast.Add):
-            self.mutation_points.append(("AOR", node))
-            node.op = ast.Sub()  # Replace + with -
+        """
+        Visit binary operation nodes in the AST and perform mutations
+        based on the selected operator type (AOR).
+        """
+        if self.operator_type == "AOR":
+            original_operator = type(node.op).__name__  # Get the original operator's type name
+            if isinstance(node.op, ast.Add):
+                self.mutation_points.append(
+                    ("AOR", original_operator, node.lineno, node.col_offset)
+                )
+                print(f"Mutating + to - at line {node.lineno}, column {node.col_offset}")
+                node.op = ast.Sub()  # Replace + with -
+            elif isinstance(node.op, ast.Sub):
+                self.mutation_points.append(
+                    ("AOR", original_operator, node.lineno, node.col_offset)
+                )
+                print(f"Mutating - to + at line {node.lineno}, column {node.col_offset}")
+                node.op = ast.Add()  # Replace - with +
+            elif isinstance(node.op, ast.Mult):
+                self.mutation_points.append(
+                    ("AOR", original_operator, node.lineno, node.col_offset)
+                )
+                print(f"Mutating * to / at line {node.lineno}, column {node.col_offset}")
+                node.op = ast.Div()  # Replace * with /
+            elif isinstance(node.op, ast.Div):
+                self.mutation_points.append(
+                    ("AOR", original_operator, node.lineno, node.col_offset)
+                )
+                print(f"Mutating / to * at line {node.lineno}, column {node.col_offset}")
+                node.op = ast.Mult()  # Replace / with *
+
+        # Recursively visit all children of the current node
         return self.generic_visit(node)
 
     def visit_Assign(self, node):
