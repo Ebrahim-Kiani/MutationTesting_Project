@@ -1,2 +1,16 @@
-mutpy==0.6.0  # Mutation testing framework
-pytest==7.4.0  # Testing framework for Python
+astmonkey==0.3.6
+astor==0.8.1
+colorama==0.4.6
+exceptiongroup==1.2.2
+iniconfig==2.0.0
+Jinja2==3.1.5
+MarkupSafe==3.0.2
+MutPy==0.6.0
+packaging==24.2
+pluggy==1.5.0
+pydot==3.0.3
+pyparsing==3.2.0
+pytest==7.4.0
+PyYAML==6.0.2
+termcolor==2.5.0
+tomli==2.2.1

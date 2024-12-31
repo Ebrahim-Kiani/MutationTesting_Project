@@ -1,1 +1,7 @@
-mut.py --target ./Order_management_system --unit-test ./tests --report-html mutation_report.html
+// for running mutpy
+mut.py --target project_module.order_management_system --unit-test tests_module.tests --report-html mutation_report.html
+
+
+// for run our custome framework
+
+open mutation_tests package and open main in mutator_framework.py

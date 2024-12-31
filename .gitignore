@@ -28,5 +28,5 @@ dist/
 # Mutation testing reports
 .mutation_cache/
 
-# all of project code
+# all of project
 all_of_project_code.py
