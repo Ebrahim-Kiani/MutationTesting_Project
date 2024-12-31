@@ -1,0 +1,32 @@
+# Python-related files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyd.dist-info
+
+# Environment-related files
+.env
+*.env
+
+# Byte-compiled files and folders
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Testing and debugging
+.coverage
+*.log
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Mutation testing reports
+.mutation_cache/
+
+# all of project code
+all_of_project_code.py

@@ -1,0 +1,2 @@
+mutpy==0.6.0  # Mutation testing framework
+pytest==7.4.0  # Testing framework for Python
