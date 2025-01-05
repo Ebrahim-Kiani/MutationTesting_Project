@@ -74,6 +74,8 @@ class BCRMutator():
             ast.fix_missing_locations(mutated_tree)
             mutated_code = astor.to_source(mutated_tree)
             self.mutated_codes.append(mutated_code)
+    
+        return self.mutated_codes
 
 
 class CODMutator():
@@ -135,6 +137,8 @@ class CODMutator():
             ast.fix_missing_locations(mutated_tree)
             mutated_code = astor.to_source(mutated_tree)
             self.mutated_codes.append(mutated_code)
+
+        return self.mutated_codes
 
 
 class COIMutator():
@@ -219,6 +223,72 @@ class COIMutator():
 
         return self.mutated_codes
 
+
+class CRPMutator():
+    """
+    A class to perform Constant Replacement (CRP) mutation on a given AST.
+    """
+    def __init__(self, tree, n):
+        self.tree = tree
+        self.n = n
+        self.mutated_codes = []
+
+    class SingleCRPMutator(ast.NodeTransformer):
+        """
+        A class to perform a single Constant Replacement (CRP) mutation.
+        """
+        def __init__(self, target_index, start, end):
+            super().__init__()
+            self.target_index = target_index
+            self.current_index = -1
+            self.start = start
+            self.end = end
+
+        def visit_Constant(self, node):
+            self.current_index += 1
+            if self.current_index == self.target_index:
+                # Replace the constant with the new value
+                return ast.Constant(value=random.randint(self.start, self.end))
+            return node
+
+    def find_constants(self):
+        class Finder(ast.NodeVisitor):
+            def __init__(self):
+                self.constants = []
+
+            def visit_Constant(self, node):
+                self.constants.append(node)
+                self.generic_visit(node)
+
+        finder = Finder()
+        finder.visit(self.tree)
+        return finder.constants
+
+    def generate_mutated_codes(self, start, end):
+        self.mutated_codes = []  
+        constants = self.find_constants()
+
+        n = min(self.n, len(constants))  
+
+        random_indices = list(range(len(constants)))
+        random.shuffle(random_indices)  
+
+        # Generate mutated versions
+        for i in random_indices[:n]:
+            # Deep copy the original tree
+            mutated_tree = deepcopy(self.tree)  
+
+            # Mutate the target constant
+            mutator = self.SingleCRPMutator(target_index=i, start=start, end=end)
+            mutator.visit(mutated_tree)
+
+            # Fix the tree and convert back to code
+            ast.fix_missing_locations(mutated_tree)
+            mutated_code = astor.to_source(mutated_tree)
+            self.mutated_codes.append(mutated_code)
+
+        return self.mutated_codes
+    
 
 class MutationOperator(ast.NodeTransformer):
     def __init__(self, operator_type):
