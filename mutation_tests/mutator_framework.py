@@ -1,7 +1,78 @@
 import ast
-import subprocess
 import astor
+import subprocess
+import random
+from copy import deepcopy
 from mutpy.operators import MutationOperator
+
+
+class BCRMutator():
+    """
+    A class to perform Break Continue Replacement (BCR) mutation on a given AST.
+    """
+    def __init__(self, tree, n):
+        self.tree = tree
+        self.n = n
+        self.mutated_codes = []
+
+    class SingleBCRMutator(ast.NodeTransformer):
+        """
+        A class to perform single Break Continue Replacement (BCR) mutation.
+        """
+        def __init__(self, target_index):
+            super().__init__()
+            self.target_index = target_index
+            self.current_index = -1
+
+        def visit_Break(self, node):
+            self.current_index += 1
+            if self.current_index == self.target_index:
+                return ast.Continue()  # Replace 'break' with 'continue'
+            return node
+
+        def visit_Continue(self, node):
+            self.current_index += 1
+            if self.current_index == self.target_index:
+                return ast.Break()  # Replace 'continue' with 'break'
+            return node
+
+    def find_break_continue_statements(self):
+        class Finder(ast.NodeVisitor):
+            def __init__(self):
+                self.statements = []
+
+            def visit_Break(self, node):
+                self.statements.append(('break', node.lineno))
+                self.generic_visit(node)
+
+            def visit_Continue(self, node):
+                self.statements.append(('continue', node.lineno))
+                self.generic_visit(node)
+
+        finder = Finder()
+        finder.visit(self.tree)
+        return finder.statements
+
+    def generate_mutated_codes(self):
+        statements = self.find_break_continue_statements()
+        n = min(self.n, len(statements))
+
+        random_indices = list(range(len(statements)))
+        random.shuffle(random_indices)
+
+        # Generate mutated versions
+        for i in random_indices[:n]:
+            # Deep copy the original tree
+            mutated_tree = deepcopy(self.tree)
+
+            # Mutate the target statement
+            mutator = self.SingleBCRMutator(target_index=i)
+            mutator.visit(mutated_tree)
+
+            # Fix the tree and convert back to code
+            ast.fix_missing_locations(mutated_tree)
+            mutated_code = astor.to_source(mutated_tree)
+            self.mutated_codes.append(mutated_code)
 
 
 class MutationOperator(ast.NodeTransformer):
