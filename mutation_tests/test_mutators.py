@@ -54,12 +54,12 @@ class BCRMutator():
     def generate_mutated_codes(self):
         self.mutated_codes = []
         statements = self.find_break_continue_statements()
-        n = min(self.n, len(statements))
 
         random_indices = list(range(len(statements)))
         random.shuffle(random_indices)
 
-        # Generate mutated versions
+        n = min(self.n, len(statements))
+        # Generate mutated codes
         for i in random_indices[:n]:
             # Deep copy the original tree
             mutated_tree = deepcopy(self.tree)
@@ -116,11 +116,11 @@ class CODMutator():
     def generate_mutated_codes(self):
         self.mutated_codes = []
         operators = self.find_conditional_operators()
-        n = min(self.n, len(operators))
 
         random_indices = list(range(len(operators)))
         random.shuffle(random_indices)
 
+        n = min(self.n, len(operators))
         # Generate mutated versions
         for i in random_indices[:n]:
             # Deep copy the original tree
@@ -199,11 +199,10 @@ class COIMutator():
         self.mutated_codes = []
         operators = self.find_conditional_operators()
 
-        n = min(self.n, len(operators))
-
         random_indices = list(range(len(operators)))
         random.shuffle(random_indices)  
 
+        n = min(self.n, len(operators))
         # Generate mutated versions
         for i in random_indices[:n]:
             # Deep copy the original tree
@@ -265,11 +264,10 @@ class CRPMutator():
         self.mutated_codes = []  
         constants = self.find_constants()
 
-        n = min(self.n, len(constants))  
-
         random_indices = list(range(len(constants)))
         random.shuffle(random_indices)  
 
+        n = min(self.n, len(constants))  
         # Generate mutated versions
         for i in random_indices[:n]:
             # Deep copy the original tree
@@ -361,7 +359,8 @@ class DDLMutator():
 
         # Generate mutated versions
         for i in random_indices[:n]:
-            mutated_tree = deepcopy(self.tree)  # Deep copy the original tree
+            # Deep copy the original tree
+            mutated_tree = deepcopy(self.tree)
 
             # Mutate the target decorator
             mutator = self.SingleDDLMutator(target_index=i)
@@ -377,17 +376,16 @@ class DDLMutator():
 
 class EHDMutator():
     """
-    A class to perform transformation by removing all `try` blocks
-    and their associated `except`, `else`, and `finally` sections.
+    A class to perform Decorator Deletion (DDL) mutation on a given AST.
     """
     def __init__(self, tree, n):
         self.tree = tree
         self.n = n
         self.mutated_codes = []
 
-    class SingleTryRemover(ast.NodeTransformer):
+    class SingleEHDMutator(ast.NodeTransformer):
         """
-        A class to remove a single `try` block, leaving only its body.
+        A class to perform a single Decorator Deletion (DDL).
         """
         def __init__(self, target_index):
             super().__init__()
@@ -400,7 +398,7 @@ class EHDMutator():
             """
             self.current_index += 1
             if self.current_index == self.target_index:
-                return node.body  # Replace the `try` block with its body
+                return node.body  # Replace the 'try' block with its body
             return self.generic_visit(node)
 
         def visit_Module(self, node):
@@ -431,21 +429,21 @@ class EHDMutator():
         return finder.try_blocks
 
     def generate_mutated_codes(self):
-        self.mutated_codes = []  # Clear previous results
+        self.mutated_codes = []
         try_blocks = self.find_try_blocks()
 
-        n = min(self.n, len(try_blocks))  # Limit `n` to the number of try blocks
-
         indices = list(range(len(try_blocks)))
-        random.shuffle(indices)  # Shuffle indices for randomness
+        random.shuffle(indices)
 
+        n = min(self.n, len(try_blocks))
         # Generate mutated versions
         for i in indices[:n]:
-            mutated_tree = deepcopy(self.tree)  # Deep copy the original tree
+            # Deep copy the original tree
+            mutated_tree = deepcopy(self.tree)
 
-            # Remove the target `try` block
-            remover = self.SingleTryRemover(target_index=i)
-            remover.visit(mutated_tree)
+            # Remove the target 'try' block
+            mutator = self.SingleEHDMutator(target_index=i)
+            mutator.visit(mutated_tree)
 
             # Fix the tree and convert back to code
             ast.fix_missing_locations(mutated_tree)
