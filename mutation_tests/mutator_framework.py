@@ -137,6 +137,89 @@ class CODMutator():
             self.mutated_codes.append(mutated_code)
 
 
+class COIMutator():
+    """
+    A class to perform Conditional Operator Insertion (COI) mutation on a given AST.
+    """
+    def __init__(self, tree, n):
+        self.tree = tree
+        self.n = n
+        self.mutated_codes = []
+
+    class SingleCOIMutator(ast.NodeTransformer):
+        """
+        A class to perform a single Conditional Operator Insertion (COI) mutation.
+        """
+        def __init__(self, target_index):
+            super().__init__()
+            self.target_index = target_index
+            self.current_index = -1
+
+        def visit_BoolOp(self, node):
+            """
+            Visit BoolOp nodes ('and', 'or') and insert additional conditions.
+            """
+            self.current_index += 1
+            if self.current_index == self.target_index:
+                # Insert a new condition into the BoolOp
+                new_condition = ast.Constant(value=random.choice([True, False])) 
+                node.values.append(new_condition)
+            return self.generic_visit(node)
+
+        def visit_Compare(self, node):
+            """
+            Visit Compare nodes and convert them into BoolOps (with an additional condition).
+            """
+            self.current_index += 1
+            if self.current_index == self.target_index:
+                # Wrap the comparison into a BoolOp ('x < y and True')
+                new_condition = ast.Constant(value=random.choice([True, False]))
+                return ast.BoolOp(op=random.choice([ast.And(), ast.Or()]), values=[node, new_condition])
+            return self.generic_visit(node)
+
+    def find_conditional_operators(self):
+        class Finder(ast.NodeVisitor):
+            def __init__(self):
+                self.operators = []
+
+            def visit_BoolOp(self, node):
+                self.operators.append(node)
+                self.generic_visit(node)
+
+            def visit_Compare(self, node):
+                self.operators.append(node)
+                self.generic_visit(node)
+
+        finder = Finder()
+        finder.visit(self.tree)
+        return finder.operators
+
+    def generate_mutated_codes(self):
+        self.mutated_codes = []
+        operators = self.find_conditional_operators()
+
+        n = min(self.n, len(operators))
+
+        random_indices = list(range(len(operators)))
+        random.shuffle(random_indices)  
+
+        # Generate mutated versions
+        for i in random_indices[:n]:
+            # Deep copy the original tree
+            mutated_tree = deepcopy(self.tree)  
+
+            # Mutate the target conditional operator
+            mutator = self.SingleCOIMutator(target_index=i)
+            mutator.visit(mutated_tree)
+
+            # Fix the tree and convert back to code
+            ast.fix_missing_locations(mutated_tree)
+            mutated_code = astor.to_source(mutated_tree)
+            self.mutated_codes.append(mutated_code)
+
+        return self.mutated_codes
+
+
 class MutationOperator(ast.NodeTransformer):
     def __init__(self, operator_type):
         self.operator_type = operator_type
