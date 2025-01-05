@@ -376,6 +376,86 @@ class DDLMutator():
             self.mutated_codes.append(mutated_code)
 
         return self.mutated_codes
+
+
+class EHDMutator():
+    """
+    A class to perform transformation by removing all `try` blocks
+    and their associated `except`, `else`, and `finally` sections.
+    """
+    def __init__(self, tree, n):
+        self.tree = tree
+        self.n = n
+        self.mutated_codes = []
+
+    class SingleTryRemover(ast.NodeTransformer):
+        """
+        A class to remove a single `try` block, leaving only its body.
+        """
+        def __init__(self, target_index):
+            super().__init__()
+            self.target_index = target_index
+            self.current_index = -1
+
+        def visit_Try(self, node):
+            """
+            Visit Try nodes and replace the target `try` block with its body.
+            """
+            self.current_index += 1
+            if self.current_index == self.target_index:
+                return node.body  # Replace the `try` block with its body
+            return self.generic_visit(node)
+
+        def visit_Module(self, node):
+            """
+            Handle the Module node to flatten lists returned by replaced Try nodes.
+            """
+            new_body = []
+            for stmt in node.body:
+                result = self.visit(stmt)
+                if isinstance(result, list):
+                    new_body.extend(result)
+                elif result is not None:
+                    new_body.append(result)
+            node.body = new_body
+            return node
+
+    def find_try_blocks(self):
+        class Finder(ast.NodeVisitor):
+            def __init__(self):
+                self.try_blocks = []
+
+            def visit_Try(self, node):
+                self.try_blocks.append(node)
+                self.generic_visit(node)
+
+        finder = Finder()
+        finder.visit(self.tree)
+        return finder.try_blocks
+
+    def generate_mutated_codes(self):
+        self.mutated_codes = []  # Clear previous results
+        try_blocks = self.find_try_blocks()
+
+        n = min(self.n, len(try_blocks))  # Limit `n` to the number of try blocks
+
+        indices = list(range(len(try_blocks)))
+        random.shuffle(indices)  # Shuffle indices for randomness
+
+        # Generate mutated versions
+        for i in indices[:n]:
+            mutated_tree = deepcopy(self.tree)  # Deep copy the original tree
+
+            # Remove the target `try` block
+            remover = self.SingleTryRemover(target_index=i)
+            remover.visit(mutated_tree)
+
+            # Fix the tree and convert back to code
+            ast.fix_missing_locations(mutated_tree)
+            mutated_code = astor.to_source(mutated_tree)
+            self.mutated_codes.append(mutated_code)
+
+        return self.mutated_codes
     
 
 class MutationOperator(ast.NodeTransformer):
