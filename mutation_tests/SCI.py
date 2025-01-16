@@ -102,17 +102,47 @@ def test_SCI():
     Example usage of SCI Mutator.
     """
     code = """
-class Payment:
-    def process_payment(self, order, amount):
-        try:
-            if not(amount >= order.calculate_total()) and True:
-                order.pay()
-                return True
-            else:
-                raise ValueError("Insufficient funds")
-        except ValueError as e:
-            print(f"Payment error: {e}")
-            return False
+# Parent Class
+class Parent:
+    def process(self, value):
+        if value > 10:
+            return "Value is large"
+        else:
+            return "Value is small"
+
+
+# Child Class with SCI Mutation (inverting condition)
+class Child(Parent):
+    def process(self, value):
+        if value <= 10:  # Inverted condition
+            return "Value is large"
+        else:
+            return "Value is small"
+
+
+# Test for SCI Mutation
+def test_sci_mutation():
+    # Create instances
+    parent_instance = Parent()
+    child_instance = Child()
+
+    # Test cases
+    result_1 = parent_instance.process(5)  # Parent's method (value <= 10)
+    result_2 = child_instance.process(5)   # Child's method (value <= 10, inverted condition)
+    result_3 = parent_instance.process(15)  # Parent's method (value > 10)
+    result_4 = child_instance.process(15)   # Child's method (value > 10, inverted condition)
+
+    # Assertions to verify correctness
+    assert result_1 == "Value is small", f"Expected 'Value is small' but got {result_1}"
+    assert result_2 == "Value is large", f"Expected 'Value is large' but got {result_2}"
+    assert result_3 == "Value is large", f"Expected 'Value is large' but got {result_3}"
+    assert result_4 == "Value is small", f"Expected 'Value is small' but got {result_4}"
+
+    print("SCI Mutation Test Passed!")
+
+# Run the test
+test_sci_mutation()
+
 """
 
     tree = ast.parse(code)
