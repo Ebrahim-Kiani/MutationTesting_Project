@@ -11,7 +11,7 @@ class AODMutator:
 
     def __init__(self, tree, n):
         self.tree = tree
-        self.n = n
+        self.n = float('inf') if n is None else n
         self.mutated_codes = []
 
     class SingleAODMutator(ast.NodeTransformer):
@@ -83,14 +83,30 @@ def print_codes(code, mutated_codes):
 def test_AOD():
     # Example usage of AOD Mutator
     code = """
-x = a + b
-y = c * d
-z = e / f - g
+# Module: orders.py
+class Order:
+    def __init__(self, customer):
+        self.customer = customer
+        self.items = []
+        self.total = 0
+        self.paid = False
+
+    def add_product(self, product, quantity):
+        self.items.append((product, quantity))
+
+    def calculate_total(self):
+        self.total = sum(product.price * quantity for product, quantity in self.items)
+        if isinstance(self.customer, VIPCustomer):
+            self.total *= (1 - self.customer.get_discount_rate())
+        return self.total
+
+
 """
 
     tree = ast.parse(code)
-    mutator = AODMutator(tree, n=100)
+    mutator = AODMutator(tree, n=None)  # Or n=float('inf')
     mutated_codes = mutator.generate_mutated_codes()
+
     print_codes(code, mutated_codes)
 
 
