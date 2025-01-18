@@ -20,7 +20,7 @@ class LOIMutator:
                 if isinstance(node.op, ast.BitAnd) or isinstance(node.op, ast.BitOr) \
                         or isinstance(node.op, ast.BitXor):
 
-                    node.right = node.right = ast.UnaryOp(op=ast.Not(), operand=node.right)
+                    node.right = ast.UnaryOp(op=ast.Not(), operand=node.right)
 
             # Recursively visit all children of the current node
             return self.generic_visit(node)
