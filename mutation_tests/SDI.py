@@ -1,28 +1,22 @@
 import ast
 import random
 from copy import deepcopy
-import astor
+import astor  # For converting AST back to source code
 
 
 class SDIMutator:
     """
-    A class to perform Statement Deletion Inside (SDI) mutation on a given AST.
+    A class to perform Static Method Decorator Insertion (SDI) mutation on a given AST.
     """
 
-    def __init__(self, tree, n=None):
-        """
-        Initialize the mutator.
-
-        :param tree: The AST of the code.
-        :param n: The number of mutations to generate. If n is None or float('inf'), all possible mutations will be generated.
-        """
+    def __init__(self, tree, n):
         self.tree = tree
-        self.n = n
+        self.n = float('inf') if n is None else n
         self.mutated_codes = []
 
     class SingleSDIMutator(ast.NodeTransformer):
         """
-        A class to perform single Statement Deletion Inside (SDI) mutation.
+        A class to perform single Static Method Decorator Insertion (SDI) mutation.
         """
 
         def __init__(self, target_index):
@@ -30,76 +24,49 @@ class SDIMutator:
             self.target_index = target_index
             self.current_index = -1
 
-        def visit_body(self, node_body):
-            """
-            Helper function to process and mutate body nodes.
-            """
+        def visit_FunctionDef(self, node):
             self.current_index += 1
             if self.current_index == self.target_index:
-                # Remove the statement at the target index
-                return []
-            return node_body
-
-        def visit_FunctionDef(self, node):
-            node.body = self.visit_body(node.body)
+                # Inserting the @staticmethod decorator before the function definition
+                node.decorator_list.insert(0, ast.Name(id='staticmethod', ctx=ast.Load()))
             return self.generic_visit(node)
 
-        def visit_ClassDef(self, node):
-            node.body = self.visit_body(node.body)
-            return self.generic_visit(node)
-
-        def visit_Module(self, node):
-            node.body = self.visit_body(node.body)
-            return self.generic_visit(node)
-
-    def find_statements(self):
-        """
-        Find all statements in the AST.
-        """
+    def find_methods(self):
         class Finder(ast.NodeVisitor):
             def __init__(self):
-                self.statements = []
-
-            def visit_FunctionDef(self, node):
-                self.statements.extend(node.body)
-                self.generic_visit(node)
+                self.methods = []
 
             def visit_ClassDef(self, node):
-                self.statements.extend(node.body)
+                # When we find a class, we visit its methods
+                for item in node.body:
+                    if isinstance(item, ast.FunctionDef):
+                        self.methods.append(item)
                 self.generic_visit(node)
 
-            def visit_Module(self, node):
-                self.statements.extend(node.body)
-                self.generic_visit(node)
-
+        # Traverse the AST to find all methods
         finder = Finder()
         finder.visit(self.tree)
-        return finder.statements
+
+        return finder.methods
 
     def generate_mutated_codes(self):
-        """
-        Generate mutated versions of the code.
-        """
         self.mutated_codes = []
-        statements = self.find_statements()
+        methods = self.find_methods()
 
-        # Generate indices for all statements
-        random_indices = list(range(len(statements)))
+        random_indices = list(range(len(methods)))
         random.shuffle(random_indices)
 
-        # If n is infinite or None, consider all statements
-        n = len(statements) if self.n is None or self.n == float('inf') else min(self.n, len(statements))
-
+        n = min(self.n, len(methods))
         # Generate mutated versions
         for i in random_indices[:n]:
             # Deep copy the original tree
             mutated_tree = deepcopy(self.tree)
 
-            # Mutate the target statement
+            # Mutate the target method by inserting @staticmethod
             mutator = self.SingleSDIMutator(target_index=i)
             mutator.visit(mutated_tree)
 
-            # Fix the tree and convert back to code
+            # Fix the tree and convert it back to source code
             ast.fix_missing_locations(mutated_tree)
             mutated_code = astor.to_source(mutated_tree)
             self.mutated_codes.append(mutated_code)
@@ -109,7 +76,7 @@ class SDIMutator:
 
 def print_codes(code, mutated_codes):
     """
-    Print the original and mutated versions of the code.
+    Print the original code and the mutated versions.
     """
     print("Original Code:")
     print(code)
@@ -117,32 +84,29 @@ def print_codes(code, mutated_codes):
     for i, mutated_code in enumerate(mutated_codes):
         print(f"\nMutated Code {i + 1}:")
         print(mutated_code)
-    print('-' * 64)
+    print(64 * '-')
 
 
 def test_SDI():
-    """
-    Example usage of SDIMutator.
-    """
     code = """
-class Calculator:
-    def add(self, a, b):
-        return a + b
+class MyClass:
+    def method1(self):
+        print("This is method1")
 
-    def multiply(self, a, b):
-        return a * b
+    def method2(self):
+        print("This is method2")
 
-calc = Calculator()
-result = calc.add(10, 20)
-print(result)
-"""
+    def method3(self):
+        print("This is method3")
+    """
 
     tree = ast.parse(code)
-    mutator = SDIMutator(tree, n=float('inf'))  # Use float('inf') for infinite mutations
+
+    mutator = SDIMutator(tree, n=None)  # Or n=float('inf')
     mutated_codes = mutator.generate_mutated_codes()
+
     print_codes(code, mutated_codes)
 
 
 if __name__ == "__main__":
     test_SDI()
-
