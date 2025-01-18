@@ -16,11 +16,13 @@ class LORMutator:
             self.current_index = -1
 
         def visit_BinOp(self, node):
-            self.current_index += 1
-            if self.current_index == self.target_index:
-                if isinstance(node.op, ast.BitAnd):
+            if isinstance(node.op, ast.BitAnd):
+                self.current_index += 1
+                if self.current_index == self.target_index:
                     node.op = ast.BitOr()  # Replace & with |
-                elif isinstance(node.op, ast.BitOr):
+            elif isinstance(node.op, ast.BitOr):
+                self.current_index += 1
+                if self.current_index == self.target_index:
                     node.op = ast.BitAnd()  # Replace | with &
 
             # Recursively visit all children of the current node

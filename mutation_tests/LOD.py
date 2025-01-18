@@ -16,10 +16,10 @@ class LODMutator:
             self.current_index = -1
 
         def visit_BinOp(self, node):
-            self.current_index += 1
-            if self.current_index == self.target_index:
-                if isinstance(node.op, ast.BitAnd) or isinstance(node.op, ast.BitOr) \
-                        or isinstance(node.op, ast.BitXor):
+            if isinstance(node.op, ast.BitAnd) or isinstance(node.op, ast.BitOr) \
+                    or isinstance(node.op, ast.BitXor):
+                self.current_index += 1
+                if self.current_index == self.target_index:
                     return node.right
 
             # Recursively visit all children of the current node
