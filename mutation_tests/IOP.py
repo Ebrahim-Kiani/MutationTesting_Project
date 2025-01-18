@@ -4,22 +4,37 @@ import astor
 
 
 def is_super_call(node):
+    """Check if a node contains a super() call in any context"""
+
+    def has_super(node):
+        # Check for direct super() call
+        if isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Name):
+                return node.func.id == 'super'
+            # Handle method calls on super()
+            if isinstance(node.func, ast.Attribute):
+                return has_super(node.func.value)
+
+        # Handle super() in attribute access
+        if isinstance(node, ast.Attribute):
+            return has_super(node.value)
+
+        return False
+
+    # Handle expression statements
     if isinstance(node, ast.Expr):
-        node = node.value
+        return has_super(node.value)
 
-    if not isinstance(node, ast.Call):
-        return False
+    # Handle assignments
+    if isinstance(node, ast.Assign):
+        # Check both targets and value for super()
+        for target in node.targets:
+            if has_super(target):
+                return True
+        return has_super(node.value)
 
-    if not isinstance(node.func, ast.Attribute):
-        return False
-
-    if not isinstance(node.func.value, ast.Call):
-        return False
-
-    if not isinstance(node.func.value.func, ast.Name):
-        return False
-
-    return node.func.value.func.id == 'super'
+    # Direct node check
+    return has_super(node)
 
 
 class IOPMutator:
@@ -38,30 +53,35 @@ class IOPMutator:
             self.current_class = node
             node = self.generic_visit(node)
             self.current_class = None
-
             return node
 
-        def visit_FunctionDef(self, node: ast.FunctionDef):
+        def visit_FunctionDef(self, node):
             if not self.current_class:
                 return node
 
-            # Find super() calls in the method body
-            super_calls = []
-            other_statements = []
-
-            for stmt in node.body:
+            super_positions = []
+            for i, stmt in enumerate(node.body):
                 if is_super_call(stmt):
-                    super_calls.append(stmt)
+                    super_positions.append(i)
+
+            if not super_positions:
+                return node
+
+            new_body = []
+            moved_supers = []
+
+            for i, stmt in enumerate(node.body):
+                if is_super_call(stmt):
+                    self.current_index += 1
+                    if self.current_index == self.target_index:
+                        moved_supers.append(stmt)
+                    else:
+                        new_body.append(stmt)
                 else:
-                    other_statements.append(stmt)
+                    new_body.append(stmt)
 
-            # If super calls found, move them to end
-            if super_calls:
-                self.current_index += 1
-                if self.current_index == self.target_index:
-                    # Reconstruct method body with super calls at end
-                    node.body = other_statements + super_calls
-
+            new_body.extend(moved_supers)
+            node.body = new_body
             return node
 
     def find_super_calls(self):
@@ -72,20 +92,20 @@ class IOPMutator:
 
             def visit_ClassDef(self, node):
                 self.current_class = node
-                node = self.generic_visit(node)
+                self.generic_visit(node)
                 self.current_class = None
-
-                return node
 
             def visit_FunctionDef(self, node: ast.FunctionDef):
                 if not self.current_class:
-                    return node
+                    return
 
+                super_count = 0
                 for stmt in node.body:
                     if is_super_call(stmt):
-                        self.super_calls.append((self.current_class.name,node.lineno))
+                        super_count += 1
 
-                return node
+                if super_count > 0:
+                    self.super_calls.append((self.current_class.name, node.lineno, super_count))
 
         finder = Finder()
         finder.visit(self.tree)
@@ -94,19 +114,21 @@ class IOPMutator:
     def generate_mutated_codes(self):
         self.mutated_codes = []
         calls = self.find_super_calls()
+        counter = 0
 
-        # Generate mutated codes
-        for i in range(len(calls)):
-            # Deep copy the original tree
-            mutated_tree = deepcopy(self.tree)
+        for class_info in calls:
+            super_count = class_info[2]
 
-            # Mutate the target statement
-            mutator = self.IOP(target_index=i)
-            mutator.visit(mutated_tree)
+            for i in range(super_count):
+                # Move single super call
+                mutated_tree = deepcopy(self.tree)
+                mutator = self.IOP(target_index=counter)
+                mutator.visit(mutated_tree)
 
-            # Fix the tree and convert back to code
-            ast.fix_missing_locations(mutated_tree)
-            mutated_code = astor.to_source(mutated_tree)
-            self.mutated_codes.append(mutated_code)
+                ast.fix_missing_locations(mutated_tree)
+                mutated_code = astor.to_source(mutated_tree)
+                self.mutated_codes.append(mutated_code)
+
+                counter += 1
 
         return self.mutated_codes
