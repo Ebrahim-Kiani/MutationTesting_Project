@@ -44,7 +44,7 @@ class CRPMutator():
         finder.visit(self.tree)
         return finder.constants
 
-    def generate_mutated_codes(self, start, end):
+    def generate_mutated_codes(self, start=0, end=100):
         self.mutated_codes = []  
         constants = self.find_constants()
 
@@ -63,8 +63,11 @@ class CRPMutator():
 
             # Fix the tree and convert back to code
             ast.fix_missing_locations(mutated_tree)
-            mutated_code = astor.to_source(mutated_tree)
-            self.mutated_codes.append(mutated_code)
+            try:
+                mutated_code = astor.to_source(mutated_tree)
+                self.mutated_codes.append(mutated_code)
+            except:
+                pass
 
         return self.mutated_codes
 

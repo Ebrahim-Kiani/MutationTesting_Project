@@ -4,8 +4,9 @@ import astor
 
 
 class EXSMutator:
-    def __init__(self, tree):
+    def __init__(self, tree, n):
         self.tree = tree
+        self.n = n
         self.mutated_codes = []
 
     class EXS(ast.NodeTransformer):

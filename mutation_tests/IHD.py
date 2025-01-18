@@ -4,8 +4,9 @@ import astor
 
 
 class IHDMutator:
-    def __init__(self, tree):
+    def __init__(self, tree, n):
         self.tree = tree
+        self.n = n
         self.mutated_codes = []
         self.class_variables = {}
         self._collect_init_variables()
