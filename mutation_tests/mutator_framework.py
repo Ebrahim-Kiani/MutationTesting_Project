@@ -1,6 +1,7 @@
 import os
 import ast
 import subprocess
+import difflib
 import Mutators
 
 
@@ -13,7 +14,7 @@ class MutationFramework:
     def run_tests(self):
         # Use python to run tests and capture the output
         result = subprocess.run(['python', self.test_file], capture_output=True, text=True)
-        return result.returncode == 0, result.stdout
+        return result.returncode == 0, result.stderr
 
     def revert_code(self, original_code):
         # Revert the source file to its original code
@@ -21,6 +22,10 @@ class MutationFramework:
             f.write(original_code)
 
     def execute(self):
+        # Clear mutation_log
+        with open('mutation_log.txt', 'w') as f:
+            f.write('')
+        
         # Read the original code
         with open(self.source_file, 'r') as f:
             original_code = f.read()
@@ -31,7 +36,7 @@ class MutationFramework:
         # Initialize the n & mutation score
         n = 1000
         kill = 0
-        totol = 0
+        total = 0
 
         for mutator in self.mutators:
             if mutator == 'AOD':
@@ -81,7 +86,7 @@ class MutationFramework:
             
             mutated_codes = mutator_class.generate_mutated_codes()
 
-            totol += len(mutated_codes)
+            this_kill = 0
             for code in mutated_codes:
                 # Write the mutated code to the source file
                 with open(self.source_file, 'w') as f:
@@ -90,17 +95,36 @@ class MutationFramework:
                 # Run the tests
                 success, output = self.run_tests()
                 if success:
-                    print("Mutant survived!")
+                    pass
                 else:
-                    print("Mutant killed!")
-                    print(output)
-                    kill += 1
+                    # save in mutation_log.txt just diff this code with string original code and type of mutatnt
+                    with open('mutation_log.txt', 'a') as f:
+                        f.write(f"Mutant Type: {mutator}\n")
+                        diff = difflib.unified_diff(
+                            code.splitlines(),     # Split file content into lines
+                            original_code.splitlines(), # Split string into lines
+                            fromfile="mutant_code",
+                            tofile="original_code",
+                            lineterm=""                     # No line terminator in output
+                        )
+                        f.write('\n'.join(diff))
+                        f.write('\n')
+                        f.write(f"Output: {output}\n")
+                        f.write('-' * 64)
+                        f.write('\n')
+                    #print(output)
+                    this_kill += 1
                 
+            total += len(mutated_codes)
+            kill += this_kill
+
+            print(f'{mutator} Mutants: {len(mutated_codes)}, Killed: {this_kill}')
+
         # Calculate Mutation Score
-        if totol == 0:
+        if total == 0:
             print("Mutation Score: 0")
         else:
-            print(f"Mutation Score: {kill/totol}")
+            print(f"Mutation Score: {kill/total}")
 
         # Revert the code
         self.revert_code(original_code)
@@ -108,8 +132,8 @@ class MutationFramework:
 
 if __name__ == "__main__":
     DEFAULT_VAR = True
-    source_file = "../test_file/example2.py"
-    test_file = "../test_file/test_example2.py"
+    source_file = "../test_file/example.py"
+    test_file = "../test_file/test_example.py"
 
     while not DEFAULT_VAR:
         source_file = input("Enter source file path: ")
@@ -125,9 +149,11 @@ if __name__ == "__main__":
         else:
             break
     
-    selcet_mutators = input("Enter mutators: [AOD, AOR, ASR, BCR, CDI, COD, COI, CRP, DDL, EHD, EXS, IHD, IOD, IOP, LOD, LOI, LOR, ROR, SCD, SCI, SDI, SIR]: ")
-    mutators = selcet_mutators.split(',')
-    mutators = ['AOD', 'AOR', 'ASR', 'BCR', 'CDI', 'COD', 'COI', 'CRP', 'DDL', 'EHD', 'EXS', 'IHD', 'IOD', 'IOP', 'LOD', 'LOI', 'LOR', 'ROR', 'SCD', 'SCI', 'SDI', 'SIR']
+    if not DEFAULT_VAR:
+        selcet_mutators = input("Enter mutators: [AOD, AOR, ASR, BCR, CDI, COD, COI, CRP, DDL, EHD, EXS, IHD, IOD, IOP, LOD, LOI, LOR, ROR, SCD, SCI, SDI, SIR]: ")
+        mutators = selcet_mutators.split(',')
+    else:
+        mutators = ['AOD', 'AOR', 'ASR', 'BCR', 'CDI', 'COD', 'COI', 'CRP', 'DDL', 'EHD', 'EXS', 'IHD', 'IOD', 'IOP', 'LOD', 'LOI', 'LOR', 'ROR', 'SCD', 'SCI', 'SDI', 'SIR']
 
     framework = MutationFramework(source_file, test_file, mutators)
     framework.execute()
