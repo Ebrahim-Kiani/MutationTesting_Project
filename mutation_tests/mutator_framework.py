@@ -1,10 +1,8 @@
+import os
 import ast
-import astor
-import random
-from copy import deepcopy
 import subprocess
-from mutpy.operators import MutationOperator
 import Mutators
+
 
 class MutationFramework:
     def __init__(self, source_file, test_file, mutators):
@@ -13,8 +11,8 @@ class MutationFramework:
         self.mutators = mutators
 
     def run_tests(self):
-        # Use pytest to run tests and capture the output
-        result = subprocess.run(['pytest', self.test_file, '--disable-warnings'], capture_output=True, text=True)
+        # Use python to run tests and capture the output
+        result = subprocess.run(['python', self.test_file], capture_output=True, text=True)
         return result.returncode == 0, result.stdout
 
     def revert_code(self, original_code):
@@ -30,7 +28,7 @@ class MutationFramework:
         # Parse the code into an AST
         tree = ast.parse(original_code)
 
-        # S n
+        # Initialize the n & mutation score
         n = 1000
         kill = 0
         totol = 0
@@ -109,5 +107,26 @@ class MutationFramework:
 
 
 if __name__ == "__main__":
-    framework = MutationFramework(source_file="../project_module/order_management_system.py", test_file='../tests_module/tests.py', None)
+    DEFAULT_VAR = True
+    source_file = "../test_file/example.py"
+    test_file = "../test_file/test_example.py"
+
+    while not DEFAULT_VAR:
+        source_file = input("Enter source file path: ")
+        if not os.path.isfile(source_file):
+            print("Source file not found")
+        else:
+            break
+
+    while not DEFAULT_VAR:
+        test_file = input("Enter test file path: ")
+        if not os.path.isfile(test_file):
+            print("Test file not found")
+        else:
+            break
+    
+    selcet_mutators = input("Enter mutators: [AOD, AOR, ASR, BCR, CDI, COD, COI, CRP, DDL, EHD, EXS, IHD, IOD, IOP, LOD, LOI, LOR, ROR, SCD, SCI, SDI, SIR]: ")
+    mutators = selcet_mutators.split(',')
+
+    framework = MutationFramework(source_file, test_file, mutators)
     framework.execute()
