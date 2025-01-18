@@ -3,7 +3,6 @@ import random
 from copy import deepcopy
 import astor  # برای تبدیل AST به کد منبع
 
-
 class AODMutator:
     """
     A class to perform Arithmetic Operator Deletion (AOD) mutation on a given AST.
@@ -43,6 +42,7 @@ class AODMutator:
 
         finder = Finder()
         finder.visit(self.tree)
+
         return finder.operators
 
     def generate_mutated_codes(self):
@@ -80,34 +80,54 @@ def print_codes(code, mutated_codes):
     print(64 * '-')
 
 
+def print_ast_tree(node, level=0):
+    """Recursively prints the AST in a tree-like format."""
+    indent = "    " * level  # Indentation based on the level of the tree
+    node_type = type(node).__name__  # Get the type of the node
+
+    # Print the current node type
+    print(f"{indent}{node_type}:")
+
+    # Check if the node has any fields to print (i.e., attributes or children)
+    for field, value in ast.iter_fields(node):
+        if isinstance(value, list):  # If it's a list of nodes, print each element
+            for item in value:
+                if isinstance(item, ast.AST):  # If the item is an AST node, recursively print it
+                    print_ast_tree(item, level + 1)
+                else:
+                    print(f"{indent}    {field} = {item}")  # Print simple values (constants)
+        elif isinstance(value, ast.AST):  # If the value is an AST node, recursively print it
+            print_ast_tree(value, level + 1)
+        else:
+            print(f"{indent}    {field} = {value}")  # Print simple values
+
+
+
+
 def test_AOD():
     # Example usage of AOD Mutator
     code = """
 # Module: orders.py
-class Order:
-    def __init__(self, customer):
-        self.customer = customer
-        self.items = []
-        self.total = 0
-        self.paid = False
-
-    def add_product(self, product, quantity):
-        self.items.append((product, quantity))
-
-    def calculate_total(self):
-        self.total = sum(product.price * quantity for product, quantity in self.items)
-        if isinstance(self.customer, VIPCustomer):
-            self.total *= (1 - self.customer.get_discount_rate())
-        return self.total
-
-
-"""
+x = 10
+y = 5
+z = x + y
+u = x / y
+    
+    
+    """
 
     tree = ast.parse(code)
+
+    # Print the AST tree
+    #print(ast.dump(tree, indent=10))
+    # Print the AST in a tree-like structure
+    #print_ast_tree(tree)
+
     mutator = AODMutator(tree, n=None)  # Or n=float('inf')
     mutated_codes = mutator.generate_mutated_codes()
 
     print_codes(code, mutated_codes)
+    # Add nodes starting from the root (the module)
 
 
 if __name__ == "__main__":

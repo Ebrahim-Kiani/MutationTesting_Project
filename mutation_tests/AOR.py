@@ -88,21 +88,10 @@ def test_AOR():
     # Example usage of AOR Mutator
     code = """
 # Module: orders.py
-class Order:
-    def __init__(self, customer):
-        self.customer = customer
-        self.items = []
-        self.total = 0
-        self.paid = False
-
-    def add_product(self, product, quantity):
-        self.items.append((product, quantity))
-
-    def calculate_total(self):
-        self.total = sum(product.price * quantity for product, quantity in self.items)
-        if isinstance(self.customer, VIPCustomer):
-            self.total *= (1 - self.customer.get_discount_rate())
-        return self.total
+x = 10
+y = 5
+z = x + y
+u = x / y
 """
 
     tree = ast.parse(code)
