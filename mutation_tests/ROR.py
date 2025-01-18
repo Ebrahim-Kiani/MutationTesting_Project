@@ -21,7 +21,11 @@ class RORMutator:
                 ast.Lt: [ast.Eq(), ast.NotEq(), ast.Gt(), ast.GtE()],
                 ast.LtE: [ast.Eq(), ast.NotEq(), ast.Gt(), ast.GtE()],
                 ast.Gt: [ast.Eq(), ast.NotEq(), ast.Lt, ast.LtE()],
-                ast.GtE: [ast.Eq(), ast.NotEq(), ast.Lt(), ast.LtE()]
+                ast.GtE: [ast.Eq(), ast.NotEq(), ast.Lt(), ast.LtE()],
+                ast.Is: [ast.IsNot],
+                ast.IsNot: [ast.Is],
+                ast.In: [ast.NotIn],
+                ast.NotIn: [ast.In],
             }
 
         def visit_Compare(self, node):
@@ -36,7 +40,11 @@ class RORMutator:
                     isinstance(op, ast.GtE) or \
                     isinstance(op, ast.Gt) or \
                     isinstance(op, ast.Eq) or \
-                    isinstance(op, ast.NotEq):
+                    isinstance(op, ast.NotEq) or \
+                    isinstance(op, ast.Is) or \
+                    isinstance(op, ast.IsNot) or \
+                    isinstance(op, ast.In) or \
+                    isinstance(op, ast.NotIn):
 
                 self.current_index += 1
                 if self.current_index == self.target_index:
@@ -62,7 +70,11 @@ class RORMutator:
                         isinstance(op, ast.GtE) or \
                         isinstance(op, ast.Gt) or \
                         isinstance(op, ast.Eq) or \
-                        isinstance(op, ast.NotEq):
+                        isinstance(op, ast.NotEq) or \
+                        isinstance(op, ast.Is) or \
+                        isinstance(op, ast.IsNot) or \
+                        isinstance(op, ast.In) or \
+                        isinstance(op, ast.NotIn):
 
                     self.operators.append((
                         type(op).__name__,
@@ -81,16 +93,19 @@ class RORMutator:
 
         # Generate mutated codes
         for i in range(len(operators)):
-            # Deep copy the original tree
-            mutated_tree = deepcopy(self.tree)
-
-            # Mutate the target statement
-            mutator = self.ROR(target_index=i)
-            mutator.visit(mutated_tree)
-
-            # Fix the tree and convert back to code
-            ast.fix_missing_locations(mutated_tree)
-            mutated_code = astor.to_source(mutated_tree)
-            self.mutated_codes.append(mutated_code)
+            try:
+                # Deep copy the original tree
+                mutated_tree = deepcopy(self.tree)
+    
+                # Mutate the target statement
+                mutator = self.ROR(target_index=i)
+                mutator.visit(mutated_tree)
+    
+                # Fix the tree and convert back to code
+                ast.fix_missing_locations(mutated_tree)
+                mutated_code = astor.to_source(mutated_tree)
+                self.mutated_codes.append(mutated_code)
+            except:
+                pass
 
         return self.mutated_codes

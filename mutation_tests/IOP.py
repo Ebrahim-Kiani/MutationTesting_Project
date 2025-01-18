@@ -120,14 +120,17 @@ class IOPMutator:
             super_count = class_info[2]
 
             for i in range(super_count):
-                # Move single super call
-                mutated_tree = deepcopy(self.tree)
-                mutator = self.IOP(target_index=counter)
-                mutator.visit(mutated_tree)
+                try:
+                    # Move single super call
+                    mutated_tree = deepcopy(self.tree)
+                    mutator = self.IOP(target_index=counter)
+                    mutator.visit(mutated_tree)
 
-                ast.fix_missing_locations(mutated_tree)
-                mutated_code = astor.to_source(mutated_tree)
-                self.mutated_codes.append(mutated_code)
+                    ast.fix_missing_locations(mutated_tree)
+                    mutated_code = astor.to_source(mutated_tree)
+                    self.mutated_codes.append(mutated_code)
+                except:
+                    pass
 
                 counter += 1
 

@@ -167,16 +167,19 @@ class IHDMutator:
         hiding_vars = self.find_hiding_variables()
 
         for i in range(len(hiding_vars)):
-            # Deep copy the original tree
-            mutated_tree = deepcopy(self.tree)
+            try:
+                # Deep copy the original tree
+                mutated_tree = deepcopy(self.tree)
 
-            # Mutate the target statement
-            mutator = self.IHD(target_index=i, class_variables=self.class_variables)
-            mutator.visit(mutated_tree)
+                # Mutate the target statement
+                mutator = self.IHD(target_index=i, class_variables=self.class_variables)
+                mutator.visit(mutated_tree)
 
-            # Fix the tree and convert back to code
-            ast.fix_missing_locations(mutated_tree)
-            mutated_code = astor.to_source(mutated_tree)
-            self.mutated_codes.append(mutated_code)
+                # Fix the tree and convert back to code
+                ast.fix_missing_locations(mutated_tree)
+                mutated_code = astor.to_source(mutated_tree)
+                self.mutated_codes.append(mutated_code)
+            except:
+                pass
 
         return self.mutated_codes
