@@ -36,8 +36,18 @@ class SCIMutator:
             """
             self.current_index += 1
             if self.current_index == self.target_index:
-                # Invert the condition
-                node.test = ast.UnaryOp(op=ast.Not(), operand=node.test)
+                # Explicitly invert the condition
+                if isinstance(node.test, ast.Compare):
+                    # Handle basic comparisons (e.g., value > 10)
+                    if isinstance(node.test.ops[0], ast.Gt):  # value > 10
+                        node.test = ast.Compare(left=node.test.left, ops=[ast.Lt()], comparators=[node.test.comparators[0]])
+                    elif isinstance(node.test.ops[0], ast.Lt):  # value < 10
+                        node.test = ast.Compare(left=node.test.left, ops=[ast.Gt()], comparators=[node.test.comparators[0]])
+                    elif isinstance(node.test.ops[0], ast.Eq):  # value == 10
+                        node.test = ast.Compare(left=node.test.left, ops=[ast.NotEq()], comparators=[node.test.comparators[0]])
+                    elif isinstance(node.test.ops[0], ast.NotEq):  # value != 10
+                        node.test = ast.Compare(left=node.test.left, ops=[ast.Eq()], comparators=[node.test.comparators[0]])
+                # You can add more cases to handle complex conditions if needed.
             return self.generic_visit(node)
 
     def find_conditionals(self):
@@ -142,7 +152,6 @@ def test_sci_mutation():
 
 # Run the test
 test_sci_mutation()
-
 """
 
     tree = ast.parse(code)
