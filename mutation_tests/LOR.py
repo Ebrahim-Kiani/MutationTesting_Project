@@ -1,12 +1,12 @@
 import ast
 from copy import deepcopy
-
 import astor
 
 
 class LORMutator:
-    def __init__(self, tree):
+    def __init__(self, tree, n):
         self.tree = tree
+        self.n = n
         self.mutated_codes = []
 
     class LOR(ast.NodeTransformer):

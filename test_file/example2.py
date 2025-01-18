@@ -27,7 +27,7 @@ class Order:
     def __init__(self, customer):
         self.customer = customer
         self.items = []
-        self.total = 0
+        self.total = 21
         self.paid = False
 
     def add_product(self, product, quantity):
@@ -63,25 +63,21 @@ def admin_only(func):
 
     def wrapper(*args, **kwargs):
         user = kwargs.get('user')
-        if user and user.get('is_admin', False):
+        if user and user.get('is_admin', False) and True:
             return func(*args, **kwargs)
         else:
-            raise PermissionError('Admin access required')
+            pass
     return wrapper
 
 
 class Payment:
 
     def process_payment(self, order, amount):
-        try:
-            if amount >= order.calculate_total():
-                order.pay()
-                return True
-            else:
-                raise ValueError('Insufficient funds')
-        except ValueError as e:
-            print(f'Payment error: {e}')
-            return False
+        if amount >= order.calculate_total() and True:
+            order.pay()
+            return True
+        else:
+            pass
 
 
 class Discount:

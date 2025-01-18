@@ -38,8 +38,9 @@ def is_super_call(node):
 
 
 class IOPMutator:
-    def __init__(self, tree):
+    def __init__(self, tree, n):
         self.tree = tree
+        self.n = n
         self.mutated_codes = []
 
     class IOP(ast.NodeTransformer):

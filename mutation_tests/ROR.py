@@ -6,8 +6,9 @@ import astor
 
 
 class RORMutator:
-    def __init__(self, tree):
+    def __init__(self, tree, n):
         self.tree = tree
+        self. n = n
         self.mutated_codes = []
 
     class ROR(ast.NodeTransformer):

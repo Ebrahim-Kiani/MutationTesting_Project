@@ -108,8 +108,8 @@ class MutationFramework:
 
 if __name__ == "__main__":
     DEFAULT_VAR = True
-    source_file = "../test_file/example.py"
-    test_file = "../test_file/test_example.py"
+    source_file = "../test_file/example2.py"
+    test_file = "../test_file/test_example2.py"
 
     while not DEFAULT_VAR:
         source_file = input("Enter source file path: ")
@@ -127,6 +127,7 @@ if __name__ == "__main__":
     
     selcet_mutators = input("Enter mutators: [AOD, AOR, ASR, BCR, CDI, COD, COI, CRP, DDL, EHD, EXS, IHD, IOD, IOP, LOD, LOI, LOR, ROR, SCD, SCI, SDI, SIR]: ")
     mutators = selcet_mutators.split(',')
+    mutators = ['AOD', 'AOR', 'ASR', 'BCR', 'CDI', 'COD', 'COI', 'CRP', 'DDL', 'EHD', 'EXS', 'IHD', 'IOD', 'IOP', 'LOD', 'LOI', 'LOR', 'ROR', 'SCD', 'SCI', 'SDI', 'SIR']
 
     framework = MutationFramework(source_file, test_file, mutators)
     framework.execute()
