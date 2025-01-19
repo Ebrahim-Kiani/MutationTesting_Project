@@ -95,8 +95,6 @@ class MutationFramework:
                 # Run the tests
                 success, output = self.run_tests()
                 if success:
-                    pass
-                else:
                     # save in mutation_log.txt just diff this code with string original code and type of mutatnt
                     with open('mutation_log.txt', 'a') as f:
                         f.write(f"Mutant Type: {mutator}\n")
@@ -113,6 +111,7 @@ class MutationFramework:
                         f.write('-' * 64)
                         f.write('\n')
                     #print(output)
+                else:
                     this_kill += 1
                 
             total += len(mutated_codes)
@@ -132,8 +131,8 @@ class MutationFramework:
 
 if __name__ == "__main__":
     DEFAULT_VAR = True
-    source_file = "../test_file/example.py"
-    test_file = "../test_file/test_example.py"
+    source_file = "../test_file/example2.py"
+    test_file = "../test_file/test_example2.py"
 
     while not DEFAULT_VAR:
         source_file = input("Enter source file path: ")
@@ -153,7 +152,7 @@ if __name__ == "__main__":
         selcet_mutators = input("Enter mutators: [AOD, AOR, ASR, BCR, CDI, COD, COI, CRP, DDL, EHD, EXS, IHD, IOD, IOP, LOD, LOI, LOR, ROR, SCD, SCI, SDI, SIR]: ")
         mutators = selcet_mutators.split(',')
     else:
-        mutators = ['AOD', 'AOR', 'ASR', 'BCR', 'CDI', 'COD', 'COI', 'CRP', 'DDL', 'EHD', 'EXS', 'IHD', 'IOD', 'IOP', 'LOD', 'LOI', 'LOR', 'ROR', 'SCD', 'SCI', 'SDI', 'SIR']
+        mutators = ['AOD', 'AOR', 'ASR', 'BCR', 'CDI', 'COD', 'COI', 'CRP', 'DDL', 'EHD', 'EXS', 'IHD', 'IOD', 'IOP', 'LOD', 'LOI', 'LOR', 'ROR', 'SCD', 'SDI']
 
     framework = MutationFramework(source_file, test_file, mutators)
     framework.execute()

@@ -1,7 +1,7 @@
 import ast
+import astor
 import random
 from copy import deepcopy
-import astor
 
 
 class ASRMutator:
@@ -75,8 +75,8 @@ class ASRMutator:
             try:
                 mutated_code = astor.to_source(mutated_tree)
                 self.mutated_codes.append(mutated_code)
-            except Exception as e:
-                print(f"Error converting mutated AST to source: {e}")
+            except:
+                pass
 
         return self.mutated_codes
 

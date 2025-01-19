@@ -30,3 +30,5 @@ dist/
 
 # all of project
 all_of_project_code.py
+
+mutation_tests/mutation

@@ -29,7 +29,10 @@ class COIMutator():
             self.current_index += 1
             if self.current_index == self.target_index:
                 # Insert a new condition into the BoolOp
-                new_condition = ast.Constant(value=random.choice([True, False])) 
+                if isinstance(node.op, ast.And):
+                    new_condition = ast.Constant(value=False)  # Insert 'False' for 'and'
+                elif isinstance(node.op, ast.Or):
+                    new_condition = ast.Constant(value=True)  # Insert 'True' for 'or'
                 node.values.append(new_condition)
             return self.generic_visit(node)
 
@@ -40,8 +43,9 @@ class COIMutator():
             self.current_index += 1
             if self.current_index == self.target_index:
                 # Wrap the comparison into a BoolOp ('x < y and True')
-                new_condition = ast.Constant(value=random.choice([True, False]))
-                return ast.BoolOp(op=random.choice([ast.And(), ast.Or()]), values=[node, new_condition])
+                #new_condition = ast.Constant(value=random.choice([True, False]))
+                return random.choice([ast.BoolOp(op=ast.And(), values=[node, ast.Constant(value=False)]), 
+                                      ast.BoolOp(op=ast.Or(), values=[node, ast.Constant(value=True)])])
             return self.generic_visit(node)
 
     def find_conditional_operators(self):
@@ -80,8 +84,11 @@ class COIMutator():
 
             # Fix the tree and convert back to code
             ast.fix_missing_locations(mutated_tree)
-            mutated_code = astor.to_source(mutated_tree)
-            self.mutated_codes.append(mutated_code)
+            try:
+                mutated_code = astor.to_source(mutated_tree)
+                self.mutated_codes.append(mutated_code)
+            except:
+                pass
 
         return self.mutated_codes
     

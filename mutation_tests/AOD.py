@@ -1,7 +1,8 @@
 import ast
+import astor 
 import random
 from copy import deepcopy
-import astor  # برای تبدیل AST به کد منبع
+
 
 class AODMutator:
     """
@@ -26,7 +27,6 @@ class AODMutator:
         def visit_BinOp(self, node):
             self.current_index += 1
             if self.current_index == self.target_index:
-                # حذف عملگر و جایگزینی با یک طرف از عملگر
                 return node.left if random.choice([True, False]) else node.right
             return self.generic_visit(node)
 
@@ -64,8 +64,11 @@ class AODMutator:
 
             # Fix the tree and convert back to code
             ast.fix_missing_locations(mutated_tree)
-            mutated_code = astor.to_source(mutated_tree)
-            self.mutated_codes.append(mutated_code)
+            try:
+                mutated_code = astor.to_source(mutated_tree)
+                self.mutated_codes.append(mutated_code)
+            except:
+                pass
 
         return self.mutated_codes
 

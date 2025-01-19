@@ -1,36 +1,25 @@
-# tests/test_orders.py
-from project_module.order_management_system import *
-from unittest import TestCase
-class ProjectTest(TestCase):
-    # ----------------------------
-    # These are tests to perform the mathematical operator mutation test.
-    # ----------------------------
-    def test_order_calculate_total_with_vip_discount(self):
-        # Arrange
-        vip_customer = VIPCustomer(name="Jane Doe", email="jane@example.com", discount_rate=0.1)
-        order = Order(vip_customer)
-        product1 = Product(name="Laptop", price=1000)
-        product2 = Product(name="Phone", price=500)
+from example2 import *
+import unittest
 
-        # Act
-        order.add_product(product1, 1)  # 1000
-        order.add_product(product2, 2)  # 500 * 2
-        total = order.calculate_total()  # (1000 + 1000) * 0.9
 
-        # Assert
-        assert total == 1800  # Total should be 1800 after discount
+class TestDecorators(unittest.TestCase):
+    def test_slow_addition(self):
+        # Test slow addition with expected output
+        self.assertEqual(slow_addition(2, 3), 5)
 
-    def test_order_calculate_total_without_discount(self):
-        # Arrange
-        customer = VIPCustomer(name="John Doe", email="john@example.com", discount_rate=0)
-        order = Order(customer)
-        product = Product(name="Tablet", price=200)
+    def test_fast_multiplication(self):
+        # Test fast multiplication with expected output
+        self.assertEqual(fast_multiplication(2, 3), 6)
 
-        # Act
-        order.add_product(product, 3)  # 200 * 3
-        total = order.calculate_total()  # 600 (No discount)
+    def test_execution_time_logging(self):
+        # Check that the decorator logs the execution time
+        # Note: You can't easily test print statements directly in unit tests,
+        # but you can mock or patch 'time.sleep' if needed for precise timing.
+        start = time.time()
+        slow_addition(1, 1)
+        end = time.time()
+        self.assertGreaterEqual(end - start, 0.5)  # Ensure at least 0.5s delay
 
-        # Assert
-        assert total == 600  # Total should be 600
-
-    # -------------------------------------------------------
+# Run the tests
+if __name__ == "__main__":
+    unittest.main()

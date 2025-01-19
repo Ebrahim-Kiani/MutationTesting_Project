@@ -25,11 +25,12 @@ class CRPMutator():
             self.end = end
 
         def visit_Constant(self, node):
-            self.current_index += 1
-            if self.current_index == self.target_index:
-                # Replace the constant with the new value
-                return ast.Constant(value=random.randint(self.start, self.end))
-            return node
+            if isinstance(node.value, (int, float)):
+                self.current_index += 1
+                if self.current_index == self.target_index:
+                    # Replace the constant with the new value
+                    return ast.Constant(value=random.randint(self.start, self.end))
+                return node
 
     def find_constants(self):
         class Finder(ast.NodeVisitor):

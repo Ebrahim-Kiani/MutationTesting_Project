@@ -1,7 +1,7 @@
 import ast
+import astor  # For converting AST back to source code
 import random
 from copy import deepcopy
-import astor  # For converting AST back to source code
 
 
 class CDIMutator:
@@ -68,8 +68,11 @@ class CDIMutator:
 
             # Fix the tree and convert it back to source code
             ast.fix_missing_locations(mutated_tree)
-            mutated_code = astor.to_source(mutated_tree)
-            self.mutated_codes.append(mutated_code)
+            try:
+                mutated_code = astor.to_source(mutated_tree)
+                self.mutated_codes.append(mutated_code)
+            except:
+                pass
 
         return self.mutated_codes
 
